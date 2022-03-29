@@ -66,7 +66,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   kubevirt-hyperconverged-operator.v4.9.3   OpenShift Virtualization   4.9.3     kubevirt-hyperconverged-operator.v4.9.2   Succeeded
   ```
 
-- Create hyperconverged object
+- Create hyperconverged object to instantiate the operator
 
   ```bash
 
@@ -353,7 +353,18 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   vcenter-lab   vsphere     True    True        True        https://192.168.8.30/sdk   3m14s
   ```
   
-  GUI can be reached at:
+  A route for MTV GUI is created in the **openshift-mtv** Namespace
+
+    ```bash
+  [root@registry AI-Vsphere]# oc get route
+  NAME                 HOST/PORT                                              PATH   SERVICES             PORT    TERMINATION          WILDCARD
+  forklift-inventory   forklift-inventory-openshift-mtv.apps.ocpd.lab.local          forklift-inventory   <all>   reencrypt/Redirect   None
+  virt                 virt-openshift-mtv.apps.ocpd.lab.local                        forklift-ui          <all>   reencrypt/Redirect   None
+  ```
+
+  We can now access the GUI
+  
+  **⚠**  The route will be dirent in your environment
   
   <https://virt-openshift-mtv.apps.ocpd.lab.local/providers/vsphere>
   
