@@ -1,0 +1,9 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: "Print all"
+      setup:
+    - name: Dump
+      debug:
+        var: hostvars[inventory_hostname]

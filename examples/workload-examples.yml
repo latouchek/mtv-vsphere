@@ -1,0 +1,181 @@
+selflink: providers/vsphere/b19df5e3-7017-4ab2-bebf-00e3c51fcb4d/workloads/vm-5058
+vm:
+  vm1:
+    vm0:
+      id: vm-5058
+      parent:
+        kind: Folder
+        id: group-v1030
+      path: ""
+      revision: 1
+      name: centos8
+      selflink: ""
+    revisionvalidated: 1
+    istemplate: false
+    powerstate: poweredOff
+    host: ""
+    networks:
+    - kind: Network
+      id: network-1051
+    disks:
+    - key: 2000
+      file: '[vsanDatastore] 4765f461-26b8-a639-8560-0cc47a64c126/centos8.vmdk'
+      datastore:
+        kind: Datastore
+        id: datastore-1048
+      capacity: 6442450944
+      shared: false
+      rdm: false
+    concerns:
+    - label: CPU/Memory hotplug detected
+      category: Warning
+      assessment: Hot pluggable CPU or memory is not currently supported by OpenShift Virtualization. Review CPU or memory configuration after migration.
+    - label: USB controller detected
+      category: Warning
+      assessment: USB controllers are not currently supported by OpenShift Virtualization. The VM can be migrated but the devices attached to the USB controller will not be migrated.
+    - label: Changed Block Tracking (CBT) not enabled
+      category: Warning
+      assessment: Changed Block Tracking (CBT) has not been enabled on this VM. This feature is a prerequisite for VM warm migration.
+  policyversion: 5
+  uuid: 421c483c-c989-2d26-e036-c36e59faba52
+  firmware: bios
+  connectionstate: connected
+  snapshot:
+    kind: ""
+    id: ""
+  changetrackingenabled: false
+  cpuaffinity: []
+  cpuhotaddenabled: true
+  cpuhotremoveenabled: false
+  memoryhotaddenabled: true
+  faulttoleranceenabled: false
+  cpucount: 1
+  corespersocket: 1
+  memorymb: 1024
+  guestname: CentOS 8 (64-bit)
+  guestid: ""
+  balloonedmemory: 0
+  ipaddress: ""
+  storageused: 5469372416
+  numanodeaffinity: []
+  devices:
+  - kind: VirtualUSBController
+  - kind: VirtualE1000
+  nics:
+  - network:
+      kind: Network
+      id: network-1051
+    mac: 00:50:56:9c:45:bb
+host:
+  host:
+    resource:
+      id: host-1046
+      parent:
+        kind: Cluster
+        id: domain-c1034
+      path: ""
+      revision: 1
+      name: 192.168.8.53
+      selflink: providers/vsphere/b19df5e3-7017-4ab2-bebf-00e3c51fcb4d/hosts/host-1046
+    cluster: ""
+    status: red
+    inmaintenancemode: false
+    managementserverip: 192.168.8.30
+    thumbprint: 6B:25:73:11:2F:F6:C4:A3:61:8E:ED:4D:EC:01:28:D1:7F:2C:E1:11
+    timezone: UTC
+    cpusockets: 2
+    cpucores: 12
+    productname: VMware ESXi
+    productversion: 7.0.3
+    network:
+      pnics:
+      - key: key-vim.host.PhysicalNic-vmnic2
+        linkspeed: 10000
+      - key: key-vim.host.PhysicalNic-vmnic1
+        linkspeed: 1000
+      - key: key-vim.host.PhysicalNic-vmnic0
+        linkspeed: 0
+      vnics:
+      - key: key-vim.host.VirtualNic-vmk0
+        portgroup: Management Network
+        dportgroup: ""
+        ipaddress: 192.168.8.53
+        subnetmask: 255.255.255.0
+        mtu: 1500
+      - key: key-vim.host.VirtualNic-vmk1
+        portgroup: VSAN
+        dportgroup: ""
+        ipaddress: 192.168.8.63
+        subnetmask: 255.255.255.0
+        mtu: 1500
+      portgroups:
+      - key: key-vim.host.PortGroup-VM Network
+        name: VM Network
+        switch: key-vim.host.VirtualSwitch-vSwitch0
+      - key: key-vim.host.PortGroup-Management Network
+        name: Management Network
+        switch: key-vim.host.VirtualSwitch-vSwitch0
+      - key: key-vim.host.PortGroup-VSAN
+        name: VSAN
+        switch: key-vim.host.VirtualSwitch-vSwitch1
+      switches:
+      - key: key-vim.host.VirtualSwitch-vSwitch0
+        name: vSwitch0
+        portgroups:
+        - key-vim.host.PortGroup-VM Network
+        - key-vim.host.PortGroup-Management Network
+        pnics:
+        - key-vim.host.PhysicalNic-vmnic2
+      - key: key-vim.host.VirtualSwitch-vSwitch1
+        name: vSwitch1
+        portgroups:
+        - key-vim.host.PortGroup-VSAN
+        pnics:
+        - key-vim.host.PhysicalNic-vmnic1
+    networks:
+    - kind: Network
+      id: network-1051
+    datastores:
+    - kind: Datastore
+      id: datastore-1050
+    - kind: Datastore
+      id: datastore-1048
+    vms: []
+    networkadapters: []
+  cluster:
+    cluster:
+      resource:
+        id: domain-c1034
+        parent:
+          kind: Folder
+          id: group-h1031
+        path: ""
+        revision: 1
+        name: tmobile
+        selflink: providers/vsphere/b19df5e3-7017-4ab2-bebf-00e3c51fcb4d/clusters/domain-c1034
+      folder: group-h1031
+      networks:
+      - kind: Network
+        id: network-1051
+      datastores:
+      - kind: Datastore
+        id: datastore-1049
+      - kind: Datastore
+        id: datastore-1048
+      - kind: Datastore
+        id: datastore-1047
+      - kind: Datastore
+        id: datastore-1050
+      hosts:
+      - kind: Host
+        id: host-1046
+      - kind: Host
+        id: host-1040
+      - kind: Host
+        id: host-1043
+      dasenabled: false
+      dasvms: []
+      drsenabled: false
+      drsbehavior: fullyAutomated
+      drsvms: []
+    datacenter: null

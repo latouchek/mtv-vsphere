@@ -1,0 +1,85 @@
+Name:         centos8
+Namespace:    default
+Labels:       migration=04064956-bdb6-48a0-b3e4-746bc703821f
+              plan=e08ae6fa-fe1a-4320-a375-7e2a808911c5
+              vmID=vm-5058
+Annotations:  kubemacpool.io/transaction-timestamp: 2022-03-28T10:44:46.476628984Z
+              kubevirt.io/latest-observed-api-version: v1
+              kubevirt.io/storage-observed-api-version: v1alpha3
+API Version:  kubevirt.io/v1
+Kind:         VirtualMachine
+UID:               4e904e35-c702-4f94-84eb-ec05517b651c
+
+.....................Truncated.................
+Spec:
+  Running:  true
+  Template:
+    Metadata:
+      Creation Timestamp:  <nil>
+    Spec:
+      Domain:
+        Clock:
+          Timer:
+          Timezone:  UTC
+        Cpu:
+          Cores:    1
+          Sockets:  1
+        Devices:
+          Disks:
+            Disk:
+              Bus:  virtio
+            Name:   vol-0
+          Inputs:
+            Bus:   virtio
+            Name:  tablet
+            Type:  tablet
+          Interfaces:
+            Bridge:
+            Mac Address:  00:50:56:9c:45:bb
+            Model:        virtio
+            Name:         net-0
+        Features:
+          Acpi:
+        Firmware:
+          Bootloader:
+            Bios:
+          Serial:  421c483c-c989-2d26-e036-c36e59faba52
+        Machine:
+          Type:  q35
+        Resources:
+          Requests:
+            Memory:  1Gi
+      Networks:
+        Multus:
+          Network Name:  default/vlan1
+        Name:            net-0
+      Volumes:
+        Data Volume:
+          Name:  test-vm-5058-6glbc
+        Name:    vol-0
+Status:
+  Conditions:
+    Last Probe Time:       <nil>
+    Last Transition Time:  2022-03-28T10:44:53Z
+    Status:                True
+    Type:                  Ready
+    Last Probe Time:       <nil>
+    Last Transition Time:  <nil>
+    Message:               cannot migrate VMI: PVC test-vm-5058-6glbc is not shared, live migration requires that all PVCs must be shared (using ReadWriteMany access mode)
+    Reason:                DisksNotLiveMigratable
+    Status:                False
+    Type:                  LiveMigratable
+    Last Probe Time:       2022-03-28T10:45:17Z
+    Last Transition Time:  <nil>
+    Status:                True
+    Type:                  AgentConnected
+  Created:                 true
+  Printable Status:        Running
+  Ready:                   true
+  Volume Snapshot Statuses:
+    Enabled:  true
+    Name:     vol-0
+Events:
+  Type    Reason            Age   From                       Message
+  ----    ------            ----  ----                       -------
+  Normal  SuccessfulCreate  23m   virtualmachine-controller  Started the virtual machine by creating the new virtual machine instance centos8
