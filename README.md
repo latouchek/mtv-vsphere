@@ -258,7 +258,10 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   EOF
   ```
 
-- Download  VMware VDDK download page <https://code.vmware.com/sdk/vddk>
+- Download  [VMware VDDK](https://code.vmware.com/sdk/vddk)
+
+  This is required to copy VMDK disks to Kubevirt
+
 - Extract the VDDK archive and cd into the extracted folder
 
   ```bash
