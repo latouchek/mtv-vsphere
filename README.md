@@ -365,7 +365,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   We can now access the GUI
   
   **⚠**  The route will be dirent in your environment
-  
+
   <https://virt-openshift-mtv.apps.ocpd.lab.local/providers/vsphere>
   
   ![image info](./pictures/mtvgui-provider-vsphere.png)
@@ -462,7 +462,14 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
     We can see that the datastore **Name** has been replaced by its **Id**. The same thing can be observed with Network Mapping
 
     ```bash
-
+    Spec:
+      Map:
+        Destination:
+          Name:       vlan1
+          Namespace:  default
+          Type:       multus
+        Source:
+          Id:  network-1051
       Provider:
         Destination:
           Name:       host
@@ -473,15 +480,8 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
     Status:
       Conditions:
         Category:              Required
-        Last Transition Time:  2022-03-11T15:51:04Z
-        Message:               The storage map is ready.
-        Status:                True
-        Type:                  Ready
-      Observed Generation:     1
-      References:
-        Id:    datastore-1048
-        Name:  vsanDatastore
-    Events:    <none>
+        Last Transition Time:  2022-03-23T21:55:04Z
+        Message:               The network map is ready.
     ```
 
 ## **Part III**
