@@ -1,8 +1,8 @@
-# Migrating  VMs from Vsphere to OpenShift CNV with Migration Toolkit for Virtualization (MTV)
+# Migrating  VMs from vSphere to OpenShift CNV with Migration Toolkit for Virtualization (MTV)
 
 ## Introduction
 
-This post will walk you through  VM migration  from Vsphere to Openshift Virtualisation (Kubevirt) by using  Migration Toolkit for Virtualization (MTV). It gatherered everything I could find on the subject during an engagment for a customer of mine.
+This post will walk you through  VM migration  from vSphere to Openshift Virtualisation (Kubevirt) by using  Migration Toolkit for Virtualization (MTV). It gatherered everything I could find on the subject during an engagment for a customer of mine.
 
 MTV is **Red Hat**'s supported version of upstream project **Forklift** and migrates virtualized workloads from different sources to Kubernetes using KubeVirt. It is designed to make the task simple so that you can migrate anything from one or two machines to hundreds of them.
 Migration is a simple, three-stage process:
@@ -17,7 +17,7 @@ Migration is a simple, three-stage process:
 
 - OCP 4.9+
 - An internal OpenShift image registry or a secure external registry
-- Vsphere API accesible form the OCP cluster
+- vSphere API accesible form the OCP cluster
   
 ## Part I
 
@@ -239,7 +239,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
 - Check Operator is ready
 
   ```bash
-  [root@registry AI-Vsphere]oc get csv -n openshift-mtv
+  [root@registry AI-vSphere]oc get csv -n openshift-mtv
   NAME                  DISPLAY                                         VERSION   REPLACES   PHASE
   mtv-operator.v2.2.0   Migration Toolkit for Virtualization Operator   2.2.0                Succeeded
   ```
@@ -295,16 +295,16 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
     vddkInitImage: default-route-openshift-image-registry.apps.ocpd.lab.local/default/vddk:latest 
   ```
 
-- Create the Vsphere provider
+- Create the  provider
 
-   We must base64 encode Vsphere user, password and thumbprint and create a secret that is going to be used in the **provider** CR
+   We must base64 encode vSphere user, password and thumbprint and create a secret that is going to be used in the **provider** CR
 
     **⚠**   **Change values to match your environment**
 
     ```bash
-    PASSWD=$(echo 'vspherepassword'|tr -d "\n" |base64 -w0)
+    PASSWD=$(echo 'vSpherepassword'|tr -d "\n" |base64 -w0)
 
-    USER=$(echo 'vsphereadminuser'|tr -d "\n"|base64 -w0)
+    USER=$(echo 'vSphereadminuser'|tr -d "\n"|base64 -w0)
 
     THUMBPRINT=$(openssl s_client -connect 192.168.8.30:443 < /dev/null 2>/dev/null \ | openssl x509 -fingerprint -noout -in /dev/stdin \ | cut -d '=' -f 2|tr -d "\n"|base64 -w0)
     VCENTERURL='https://192.168.8.30/sdk' 
@@ -328,7 +328,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
 
     ```
 
-  and the **Vsphere provider**
+  and the **vSphere provider**
 
   ```bash
     cat << EOF | oc create -f -
@@ -341,7 +341,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
       secret:
         name: vcenter-lab
         namespace: openshift-mtv
-      type: vsphere
+      type: vSphere
       url: $VCENTERURL
     EOF
 
@@ -353,13 +353,13 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   [root@registry ~] oc get provider
   NAME          TYPE        READY   CONNECTED   INVENTORY   URL                        AGE
   host          openshift   True    True        True                                   2d20h
-  vcenter-lab   vsphere     True    True        True        https://192.168.8.30/sdk   3m14s
+  vcenter-lab   vSphere     True    True        True        https://192.168.8.30/sdk   3m14s
   ```
   
   A route for MTV GUI is created in the **openshift-mtv** Namespace
 
     ```bash
-  [root@registry AI-Vsphere]# oc get route
+  [root@registry AI-vSphere]# oc get route
   NAME                 HOST/PORT                                              PATH   SERVICES             PORT    TERMINATION          WILDCARD
   forklift-inventory   forklift-inventory-openshift-mtv.apps.ocpd.lab.local          forklift-inventory   <all>   reencrypt/Redirect   None
   virt                 virt-openshift-mtv.apps.ocpd.lab.local                        forklift-ui          <all>   reencrypt/Redirect   None
@@ -369,9 +369,9 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   
   **⚠**  The route will be dirent in your environment
 
-  <https://virt-openshift-mtv.apps.ocpd.lab.local/providers/vsphere>
+  <https://virt-openshift-mtv.apps.ocpd.lab.local/providers/vSphere>
   
-  ![image info](./pictures/mtvgui-provider-vsphere.png)
+  ![image info](./pictures/mtvgui-provider-vSphere.png)
 
 - Create Mapping
 
@@ -578,7 +578,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
 - Check the plan status with the CLI and the GUI
   
   ```bash
-  root@registry AI-Vsphere]# oc get plan
+  root@registry AI-vSphere]# oc get plan
   NAME   READY   EXECUTING   SUCCEEDED   FAILED   AGE
   test   True                                     9s
   ```
@@ -609,7 +609,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   Plan is starting
 
   ```bash
-  [root@registry AI-Vsphere]oc get plan
+  [root@registry AI-vSphere]oc get plan
   NAME   READY   EXECUTING   SUCCEEDED   FAILED   AGE
   test   True    True                             13m
   ```
@@ -617,7 +617,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   A PVC is created in the  namespace we chose and the migrating VM disk is being copied to it
 
   ```bash
-  root@registry AI-Vsphere]oc get pvc -n default
+  root@registry AI-vSphere]oc get pvc -n default
   NAME                 STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS                  AGE
   test-vm-5058-6glbc   Bound    pvc-f0042e2f-e8ea-48e0-a8d3-dbd9c3159290   6Gi        RWO            ocs-storagecluster-ceph-rbd   105s
   ```
@@ -625,7 +625,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   The VM has been created
 
   ```bash
-  [root@registry AI-Vsphere]oc get vm -n default
+  [root@registry AI-vSphere]oc get vm -n default
   NAME      AGE     STATUS    READY
   centos8   3m51s   Stopped   False
   ```
@@ -633,7 +633,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   Migration completed
 
   ```bash
-  [root@registry AI-Vsphere]# oc get plan
+  [root@registry AI-vSphere]# oc get plan
   NAME   READY   EXECUTING   SUCCEEDED   FAILED   AGE
   test   True                True                 16m
   ```
@@ -643,7 +643,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   The newly created VM is connected to the desired network and is 1to1 copy of the original
   
   ```bash
-  [root@registry AI-Vsphere]oc describe vm centos8 -n default
+  [root@registry AI-vSphere]oc describe vm centos8 -n default
   Name:         centos8
   Namespace:    default
 
@@ -697,6 +697,8 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   ```
   
 ## **Part IV**
+
+## Running pre/post migration hook
 
 Coming soon
 

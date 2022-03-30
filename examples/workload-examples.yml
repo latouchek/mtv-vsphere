@@ -7,12 +7,12 @@ vm:
         kind: Folder
         id: group-v1030
       path: ""
-      revision: 1
+      revision: 5
       name: centos8
       selflink: ""
-    revisionvalidated: 1
+    revisionvalidated: 5
     istemplate: false
-    powerstate: poweredOff
+    powerstate: poweredOn
     host: ""
     networks:
     - kind: Network
@@ -53,9 +53,9 @@ vm:
   corespersocket: 1
   memorymb: 1024
   guestname: CentOS 8 (64-bit)
-  guestid: ""
+  guestid: centos8_64Guest
   balloonedmemory: 0
-  ipaddress: ""
+  ipaddress: 192.168.8.75
   storageused: 5469372416
   numanodeaffinity: []
   devices:
