@@ -367,11 +367,11 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
 
   We can now access the GUI
   
-  **⚠**  The route will be dirent in your environment
+  **⚠**  The route will be different in your environment
 
   <https://virt-openshift-mtv.apps.ocpd.lab.local/providers/vSphere>
   
-  ![image info](./pictures/mtvgui-provider-vSphere.png)
+  ![image info](./pictures/mtvgui-provider-vsphere.png)
 
 - Create Mapping
 
