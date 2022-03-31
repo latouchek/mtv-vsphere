@@ -407,6 +407,8 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
 
   - Create a Network mapping
 
+  **⚠**  The destination namespace must be the same as the network attachment created previously
+
     ```bash
     cat << EOF | oc create -f -
     apiVersion: forklift.konveyor.io/v1beta1
@@ -417,7 +419,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
     spec:
       map:
       - destination:
-          name: vlan1
+          name: vlan1  
           namespace: default
           type: multus
         source:
@@ -537,7 +539,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
       vms:
       - hooks: []
         name: centos8    ####Name of the vm to be migrated. Lowercases names only  !!!
-      warm: false #### The VM will be stop before migration
+      warm: false #### The VM will be stopped before migration
     EOF
     ```
 
@@ -586,7 +588,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   ![image info](./pictures/migrationtestsimpleready.png)
 - Run the Plan
   
-  To run the plan, a **Migration** CR is needed
+  To run the plan, a **migration** CR is needed
 
   ```bash
   cat << EOF | oc apply -f -
@@ -604,7 +606,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   ```
 
 - Observe the migration happening
-  ![image info](./pictures/migrationtestsimpledone.png)
+  ![image info](./pictures/migrationtestsimpleongoing.png)
 
   Plan is starting
 
@@ -622,7 +624,7 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   test-vm-5058-6glbc   Bound    pvc-f0042e2f-e8ea-48e0-a8d3-dbd9c3159290   6Gi        RWO            ocs-storagecluster-ceph-rbd   105s
   ```
 
-  The VM has been created
+  The VM has now been created
 
   ```bash
   [root@registry AI-vSphere]oc get vm -n default
@@ -630,13 +632,15 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   centos8   3m51s   Stopped   False
   ```
 
-  Migration completed
+  Migration has completed
 
   ```bash
   [root@registry AI-vSphere]# oc get plan
   NAME   READY   EXECUTING   SUCCEEDED   FAILED   AGE
   test   True                True                 16m
   ```
+
+  ![image info](./pictures/migrationtestsimpledone.png)
 
 - Check the new VM
 
