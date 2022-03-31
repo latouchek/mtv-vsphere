@@ -702,7 +702,214 @@ In this part we are going to setup OCP so Kubevirt VMs can be plugged into multi
   
 ## **Part IV**
 
-## Running pre/post migration hook
+## **Running pre/post migration Ansible hook**
+
+## A Simple Hook
+
+  It is possible to run an Ansible  playbook against the VM before or after migration. This is made possible by running the playbook inside  an [ansible-runner](<https://ansible-runner.readthedocs.io/en/stable/>) pod that is created during the process.
+  The hook is added to a migration plan by using the MTV web console or by specifying values for the spec.hooks parameters in the Migration Plan custom resource (CR) manifest.
+  The hook container runs as a job, using the cluster, service account, and namespace specified in the Migration Plan CR. The hook container uses a specified service account token so that the tasks do not require authentication before they run in the cluster.
+  When a hook is called during the migration, it starts with some information mounted as a ConfigMap in **/tmp/hook/**. The most valuable informations are in the /tmp/hook/workloads.yaml** and can be visualized by running a simple playbook:
+
+```yaml
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: "Print all"
+      setup:
+    - name: Dump
+      debug:
+        var: hostvars[inventory_hostname]
+```
+
+This will dump all available variables for us to use when applying mor complex playbooks
+
+- Create the hook CR
+
+  The playbook must be base64 encoded and added to the CR
+  
+  ```bash
+
+  PLAYBOOKBASE64=$(cat playbook/simple-playbook.yaml|base64 -w0)
+
+  cat << EOF | oc create -f -
+  apiVersion: forklift.konveyor.io/v1beta1
+  kind: Hook
+  metadata:
+    name: playbook
+    namespace: openshift-mtv
+  spec:
+    image: quay.io/konveyor/hook-runner:nmcli 
+    playbook: |
+      $PLAYBOOKBASE64
+    serviceAccount: forklift-controller
+  EOF
+  ```
+
+- Prepare the **migration plan** CR .
+
+  - We must add the **hook** to the **vms** block
+
+    ```yaml
+      vms:
+      - hooks:
+        - hook:
+            name: simplehook  ####The name of the hook we previously created###
+            namespace: openshift-mtv
+          step: PreHook  ###Specifies we want to apply the hook before migration
+        name: centos8    ####Name of the vm to be migrated. Lowercases names only  !!!
+      warm: false
+    EOF
+    ```
+
+- Let's create the plan with the following command:
+
+  ```bash
+  cat << EOF | oc create -f -
+  apiVersion: forklift.konveyor.io/v1beta1
+  kind: Plan
+  metadata:
+    name: test
+    namespace: openshift-mtv
+  spec:
+    archived: false
+    description: ""
+    map:
+      network:
+        name: vlan1
+        namespace: openshift-mtv
+      storage:
+        name: vsan
+        namespace: openshift-mtv
+    provider:
+      destination:
+        name: host
+        namespace: openshift-mtv
+      source:
+        name: vcenter-lab
+        namespace: openshift-mtv
+    targetNamespace: default
+    vms:
+    - hooks:
+      - hook:
+          name: simplehook
+          namespace: openshift-mtv
+        step: PreHook
+      name: centos8
+    warm: false
+  EOF
+  ```
+
+- Run the Plan
+  
+- Observe
+  
+  When the plan is ran, a prehook pod named **your plan name-your vm Id-prehook/posthook-random characters** is created. This is where the ansible playbook will run
+
+  ```bash
+  [root@registry AI-Vsphere] oc get pod
+  NAME                                        READY   STATUS      RESTARTS      AGE
+  forklift-controller-5cdb8d6cb8-fkxlr        2/2     Running     0             24h
+  forklift-must-gather-api-78c59f4b65-wg2p2   1/1     Running     0             24h
+  forklift-operator-7d458846d7-8n4g9          1/1     Running     2 (24h ago)   24h
+  forklift-ui-549bcf4b64-s9wz2                1/1     Running     0             24h
+  forklift-validation-75f48fbddd-h5tm5        1/1     Running     0             24h
+  test-vm-5058-prehook-bqhv9-nc6zs            0/1     Running   0             8s ## ansible-runner pod has just been created
+  ```
+
+- Watch the pod logs
+  
+  The playbook has completed successfully and we can see some of the ansible variables that were retrieved.
+  (The full version of the logs can be found in examples folder)
+
+  ```bash
+  [root@registry AI-Vsphere]oc logs test-vm-5058-prehook-bqhv9-nc6zs
+
+  [WARNING]: No inventory was parsed, only implicit localhost is available
+  [WARNING]: provided hosts list is empty, only localhost is available. Note that
+  the implicit localhost does not match 'all'
+
+  PLAY [localhost] ***************************************************************
+
+  TASK [Gathering Facts] *********************************************************
+  ok: [localhost]
+
+  TASK [Print all] ***************************************************************
+  ok: [localhost]
+
+  TASK [Dump] ********************************************************************
+  o": "2022-03-24T17:59:43.768471Z",
+              "minute": "59",
+              "month": "03",
+              "second": "43",
+              "time": "17:59:43",
+              "tz": "UTC",
+              "tz_offset": "+0000",
+              "weekday": "Thursday",
+              "weekday_number": "4",
+              "weeknumber": "12",
+              "year": "2022"
+          },
+          "ansible_default_ipv4": {
+              "address": "10.128.2.190",
+
+
+  #######data removed for visibility
+
+
+          "ansible_virtualization_role": "guest",
+          "ansible_virtualization_type": "VMware",
+          "gather_subset": [
+              "all"
+          ],
+          "group_names": [],
+          "groups": {
+              "all": [],
+              "ungrouped": []
+          },
+          "inventory_hostname": "localhost",
+          "inventory_hostname_short": "localhost",
+          "module_setup": true,
+          "omit": "__omit_place_holder__2d6eaf6475a8737ce142de123afe2bbb479010f3",
+          "playbook_dir": "/tmp/hook"
+      }
+  }
+
+  PLAY RECAP *********************************************************************
+  localhost                  : ok=3    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  ```
+
+- We can also observe the data in the **Configmap**
+  
+  ```bash
+  oc describe configmaps test-vm-5058-prehook-5gbwn
+  ```
+  
+  The full output can be found in examples/configmap-test.yml.
+
+  ```bash
+      workload.yml:
+    ----
+    selflink: providers/vsphere/b19df5e3-7017-4ab2-bebf-00e3c51fcb4d/workloads/vm-5058
+    vm:
+      vm1:
+        vm0:
+          id: vm-5058
+          parent:
+            kind: Folder
+            id: group-v1030
+          path: ""
+          revision: 17
+          name: centos8
+          selflink: ""
+        revisionvalidated: 17
+        istemplate: false
+        powerstate: poweredOff
+        #########Truncated for better visibility######
+  ```
+
+### **A less simple hook**
 
 Coming soon
 
