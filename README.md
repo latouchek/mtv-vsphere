@@ -802,10 +802,22 @@ This will dump all available variables for us to use when applying mor complex p
   ```
 
 - Run the Plan
-  
+  ```bash
+  cat << EOF | oc apply -f -
+  apiVersion: forklift.konveyor.io/v1beta1
+  kind: Migration
+  metadata:
+    name: migration-test
+    namespace: openshift-mtv
+  spec:
+    plan:
+      name: test
+      namespace: openshift-mtv
+  EOF
+  ```  
 - Observe
   
-  When the plan is ran, a prehook pod named **your plan name-your vm Id-prehook/posthook-random characters** is created. This is where the ansible playbook will run
+  When the plan is ran, a prehook pod named **your plan name-your vm Id-prehook/posthook-random characters** is created. This is where the ansible playbook will run.
 
   ```bash
   [root@registry AI-Vsphere] oc get pod
@@ -920,3 +932,4 @@ Coming soon
 - [Forklift Documentation
 ](https://forklift-docs.konveyor.io/)
 - [Installing and using the Migration Toolkit for Virtualization](https://access.redhat.com/documentation/en-us/migration_toolkit_for_virtualization/2.2/html/installing_and_using_the_migration_toolkit_for_virtualization/index)
+- https://github.com/konveyor/forklift-controller/blob/main/docs/hooks.md

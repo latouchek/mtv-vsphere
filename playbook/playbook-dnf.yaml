@@ -1,0 +1,53 @@
+---
+- name: Main
+  hosts: localhost
+  tasks:
+  - name: Load Plan
+    include_vars:
+      file: plan.yml
+      name: plan
+
+  - name: Load Workload
+    include_vars:
+      file: workload.yml
+      name: workload
+
+  - name: 
+    getent:
+      database: passwd
+      key: "{{ ansible_user_id }}"
+      split: ':'
+
+  - name: Ensure SSH directory exists
+    file:
+      path: ~/.ssh
+      state: directory
+      mode: 0750
+    environment:
+      HOME: "{{ ansible_facts.getent_passwd[ansible_user_id][4] }}"
+  
+  - k8s_info:
+      api_version: v1
+      kind: Secret
+      name: ssh-credentials
+      namespace: openshift-mtv
+    register: ssh_credentials
+
+  - name: Create SSH key
+    copy:
+      dest: ~/.ssh/id_ed25519
+      content: "{{ ssh_credentials.resources[0].data.key | b64decode }}"
+      mode: 0600
+
+  - add_host:
+      name: "{{ workload.vm.ipaddress }}"
+      ansible_user: root
+      groups: vms
+
+- hosts: vms
+  tasks:
+  - name: Install nmstate
+    dnf:
+      name:
+      - qemu-guest-agent
+      state: latest

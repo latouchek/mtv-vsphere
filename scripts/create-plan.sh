@@ -25,7 +25,7 @@ spec:
   vms:
   - hooks:
     - hook:
-        name: simplehook
+        name: dnf-hook
         namespace: openshift-mtv
       step: PreHook
     name: centos8
