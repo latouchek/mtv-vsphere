@@ -1,5 +1,5 @@
 
-PLAYBOOKBASE64=$(cat playbook/playbook-dnf.yaml|base64 -w0)
+PLAYBOOKBASE64=$(cat playbook/dnf-playbook.yaml|base64 -w0)
 
 cat << EOF | oc create -f -
 apiVersion: forklift.konveyor.io/v1beta1
@@ -13,4 +13,3 @@ spec:
     $PLAYBOOKBASE64
   serviceAccount: forklift-controller
 EOF
-

@@ -1,0 +1,44 @@
+[1;35m[WARNING]: No inventory was parsed, only implicit localhost is available[0m
+[1;35m[WARNING]: provided hosts list is empty, only localhost is available. Note that[0m
+[1;35mthe implicit localhost does not match 'all'[0m
+
+PLAY [Main] ********************************************************************
+
+TASK [Gathering Facts] *********************************************************
+[0;32mok: [localhost][0m
+
+TASK [Load Plan] ***************************************************************
+[0;32mok: [localhost][0m
+
+TASK [Load Workload] ***********************************************************
+[0;32mok: [localhost][0m
+
+TASK [getent] ******************************************************************
+[0;32mok: [localhost][0m
+
+TASK [Ensure SSH directory exists] *********************************************
+[0;33mchanged: [localhost][0m
+
+TASK [k8s_info] ****************************************************************
+[0;32mok: [localhost][0m
+
+TASK [Create SSH key] **********************************************************
+[0;33mchanged: [localhost][0m
+
+TASK [add_host] ****************************************************************
+[0;33mchanged: [localhost][0m
+
+PLAY [vms] *********************************************************************
+
+TASK [Gathering Facts] *********************************************************
+[0;32mok: [192.168.8.75][0m
+
+TASK [Install qemu-guest-agent] ************************************************
+[0;33mchanged: [192.168.8.75][0m
+[0;33m192.168.8.75[0m               : [0;32mok=2   [0m [0;33mchanged=1   [0m unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+[0;33mlocalhost[0m                  : [0;32mok=8   [0m [0;33mchanged=3   [0m unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+PLAY RECAP *********************************************************************
+[0;33m192.168.8.75[0m               : [0;32mok=2   [0m [0;33mchanged=1   [0m unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+[0;33mlocalhost[0m                  : [0;32mok=8   [0m [0;33mchanged=3   [0m unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+

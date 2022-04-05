@@ -2,7 +2,7 @@ cat << EOF | oc create -f -
 apiVersion: forklift.konveyor.io/v1beta1
 kind: Plan
 metadata:
-  name: test
+  name: test-dnf
   namespace: openshift-mtv
 spec:
   archived: false
@@ -31,5 +31,6 @@ spec:
     name: centos8
   warm: false
 EOF
+
 
 

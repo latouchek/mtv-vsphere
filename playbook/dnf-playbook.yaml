@@ -46,7 +46,7 @@
 
 - hosts: vms
   tasks:
-  - name: Install nmstate
+  - name: Install qemu-guest-agent
     dnf:
       name:
       - qemu-guest-agent

@@ -802,6 +802,7 @@ This will dump all available variables for us to use when applying mor complex p
   ```
 
 - Run the Plan
+
   ```bash
   cat << EOF | oc apply -f -
   apiVersion: forklift.konveyor.io/v1beta1
@@ -815,6 +816,7 @@ This will dump all available variables for us to use when applying mor complex p
       namespace: openshift-mtv
   EOF
   ```  
+
 - Observe
   
   When the plan is ran, a prehook pod named **your plan name-your vm Id-prehook/posthook-random characters** is created. This is where the ansible playbook will run.
@@ -899,9 +901,9 @@ This will dump all available variables for us to use when applying mor complex p
   ```
   
   The full output can be found in examples/configmap-test.yml.
-
+  
   ```bash
-      workload.yml:
+  workload.yml:
     ----
     selflink: providers/vsphere/b19df5e3-7017-4ab2-bebf-00e3c51fcb4d/workloads/vm-5058
     vm:
@@ -921,8 +923,209 @@ This will dump all available variables for us to use when applying mor complex p
         #########Truncated for better visibility######
   ```
 
-### **A less simple hook**
+## **A less simple hook**
 
+- Preparing the playbook
+  
+  In this part we are going to decribe the steps to run an ansible playbook against a VM before migration (Prehook).
+  
+  Because ansible is ssh based and the playbook is ran from an ansible-runner pod we need to insure that:
+
+  - The VM's ip is provided to the pod and passed to the **playbook**
+  - Ansible-runner pod has the proper ssh key to ssh to   the VM
+  
+- Create a secret for the ssh private key the runner will use to run the playbook.
+
+  **⚠** Make sure the public key associated with the private key is in the VM's **authorized_keys** file
+
+  ```bash
+      SSHBASE64=$(cat .ssh/id_ed25519 |base64 -w0)
+      cat << EOF | oc create -f -
+      apiVersion: v1
+      data:
+        key:|
+         $SSHBASE64
+      kind: Secret
+      metadata:
+        name: ssh-credentials
+        namespace: openshift-mtv
+      type: Opaque
+      EOF
+  ```
+
+- Use **plan.yml** and **workload.yml** content mounted in a configmap on the **ansible-runner** and include it as ansible variables
+
+  ```yaml
+  - name: Main
+    hosts: localhost
+    tasks:
+    - name: Load Plan
+      include_vars:
+        file: plan.yml
+        name: plan
+
+    - name: Load Workload
+      include_vars:
+        file: workload.yml
+        name: workload
+
+    - name: 
+      getent:
+        database: passwd
+        key: "{{ ansible_user_id }}"
+        split: ':'
+  ```
+  
+- Use the previously created secret to populate .ssh directory in the **ansible-runner** pod with the ssh private key used to connect to the VM.
+
+  ```yaml
+
+    - name: Ensure SSH directory exists
+      file:
+        path: ~/.ssh
+        state: directory
+        mode: 0750
+      environment:
+        HOME: "{{ ansible_facts.getent_passwd[ansible_user_id][4] }}"
+    
+    - k8s_info:
+        api_version: v1
+        kind: Secret
+        name: ssh-credentials
+        namespace: openshift-mtv
+      register: ssh_credentials
+
+    - name: Create SSH key
+      copy:
+        dest: ~/.ssh/id_ed25519
+        content: "{{ ssh_credentials.resources[0].data.key | b64decode }}"
+        mode: 0600
+  ```
+
+- Use **add_host** module to specify the VM as target in our playbook and perform some actions. In this example we install **qemu-guest-agent** so once migrated our VM can send infos to kubevirt such as ips etc
+
+  ```yaml
+
+    - add_host:
+        name: "{{ workload.vm.ipaddress }}"
+        ansible_user: root
+        groups: vms
+
+  - hosts: vms  ####Playbook now targets the VM instead of localhost
+    tasks:
+    - name: Install nmstate
+      dnf:
+        name:
+        - qemu-guest-agent
+        state: latest
+  ```
+
+- Base64 encode the playbook and create the hook CR
+
+  ```bash
+  PLAYBOOKBASE64=$(cat playbook/playbook-dnf.yaml|base64 -w0)
+
+  cat << EOF | oc create -f -
+  apiVersion: forklift.konveyor.io/v1beta1
+  kind: Hook
+  metadata:
+    name: dnf-hook
+    namespace: openshift-mtv
+  spec:
+    image: quay.io/konveyor/hook-runner:nmcli
+    playbook: |
+      $PLAYBOOKBASE64
+    serviceAccount: forklift-controller
+  EOF
+  ```
+  
+- Create a Plan including the new hook
+
+  ```bash
+  cat << EOF | oc create -f -
+  apiVersion: forklift.konveyor.io/v1beta1
+  kind: Plan
+  metadata:
+    name: test-dnf
+    namespace: openshift-mtv
+  spec:
+    archived: false
+    description: ""
+    map:
+      network:
+        name: vlan1
+        namespace: openshift-mtv
+      storage:
+        name: vsan
+        namespace: openshift-mtv
+    provider:
+      destination:
+        name: host
+        namespace: openshift-mtv
+      source:
+        name: vcenter-lab
+        namespace: openshift-mtv
+    targetNamespace: default
+    vms:
+    - hooks:
+      - hook:
+          name: dnf-hook
+          namespace: openshift-mtv
+        step: PreHook
+      name: centos8
+    warm: false
+  EOF
+  ```
+
+- Create the migration and observe the result by watching the ansible-runner logs
+
+  ```yaml
+  TASK [Load Plan] ***************************************************************
+  ok: [localhost]
+
+  TASK [Load Workload] ***********************************************************
+  ok: [localhost]
+
+  TASK [getent] ******************************************************************
+  ok: [localhost]
+
+  TASK [Ensure SSH directory exists] *********************************************
+  changed: [localhost]
+
+  TASK [k8s_info] ****************************************************************
+  ok: [localhost]
+
+  TASK [Create SSH key] **********************************************************
+  changed: [localhost]
+
+  TASK [add_host] ****************************************************************
+  changed: [localhost]
+
+  PLAY [vms] *********************************************************************
+
+  TASK [Gathering Facts] *********************************************************
+  ok: [192.168.8.75]
+
+  TASK [Install qemu-guest-agent] ************************************************
+  changed: [192.168.8.75]
+  192.168.8.75               : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  localhost                  : ok=8    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+
+  PLAY RECAP *********************************************************************
+  192.168.8.75               : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+  localhost                  : ok=8    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0 
+  ```
+
+  The tasks has completed successfully and we see the VMs IP has been discovered and used to run the dnf module part of our **Playbook**
+
+  ![image info](./pictures/migrationdone-dnf-hook.png)
+
+  ![image info](./pictures/vmrunning-qemuagent.png)
+
+  Migration has completed and the VM is in running state. IP informations are provided by qemu agent we just installed
+
+## How to migrate Multiple NICs VM
+  
 Coming soon
 
 ### Thank you for reading
@@ -932,4 +1135,4 @@ Coming soon
 - [Forklift Documentation
 ](https://forklift-docs.konveyor.io/)
 - [Installing and using the Migration Toolkit for Virtualization](https://access.redhat.com/documentation/en-us/migration_toolkit_for_virtualization/2.2/html/installing_and_using_the_migration_toolkit_for_virtualization/index)
-- https://github.com/konveyor/forklift-controller/blob/main/docs/hooks.md
+- <https://github.com/konveyor/forklift-controller/blob/main/docs/hooks.md>
